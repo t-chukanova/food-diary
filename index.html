@@ -166,7 +166,8 @@
   .tag.pending{color:var(--clay);border-color:var(--clay);font-weight:600;}
   .entry-note{font-size:0.82rem;color:var(--ink-soft);font-style:italic;}
   .entry-actions{margin-top:8px;display:flex;gap:14px;flex-wrap:wrap;}
-  .del-btn,.fu-btn,.edit-btn{background:none;border:none;color:var(--ink-soft);font-size:0.74rem;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit;}
+  .del-btn,.fu-btn,.edit-btn,.cal-btn{background:none;border:none;color:var(--ink-soft);font-size:0.74rem;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit;}
+  .cal-btn{color:var(--sage);font-weight:600;}
   .fu-btn{color:var(--clay);font-weight:600;}
 
   .day-divider{font-size:0.76rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);margin:22px 0 10px;font-weight:600;}
@@ -249,16 +250,6 @@
   <!-- ===== ДОБАВИТЬ / РЕДАКТИРОВАТЬ ЗАПИСЬ ===== -->
   <section id="view-add" class="view active">
 
-    <div class="card">
-      <label class="field-label">Вес</label>
-      <div style="display:flex;gap:10px;">
-        <input type="date" id="w-date" style="flex:1;">
-        <input type="number" id="w-value" step="0.1" min="20" max="300" placeholder="кг" style="flex:1;">
-      </div>
-      <button type="button" class="save-btn ghost" id="w-save" style="margin-top:10px;">Сохранить вес</button>
-      <div class="field-help" id="w-last"></div>
-    </div>
-
     <div class="card" id="edit-banner" style="display:none;">
       <div class="row">
         <span>✎ Редактирование записи</span>
@@ -321,7 +312,7 @@
       </div>
 
       <div class="card">
-        <label class="field-label">Причина приёма пищи</label>
+        <label class="field-label">Причина приёма пищи (можно выбрать несколько)</label>
         <div class="chips" id="reason-chips">
           <div class="chip" data-reason="Голод">Голод</div>
           <div class="chip" data-reason="По расписанию">По расписанию</div>
@@ -339,6 +330,16 @@
 
       <button type="submit" class="save-btn" id="save-submit-btn">Сохранить запись</button>
     </form>
+
+    <div class="card">
+      <label class="field-label">Вес</label>
+      <div style="display:flex;gap:10px;">
+        <input type="date" id="w-date" style="flex:1;">
+        <input type="number" id="w-value" step="0.1" min="20" max="300" placeholder="кг" style="flex:1;">
+      </div>
+      <button type="button" class="save-btn ghost" id="w-save" style="margin-top:10px;">Сохранить вес</button>
+      <div class="field-help" id="w-last"></div>
+    </div>
   </section>
 
   <!-- ===== ИСТОРИЯ ===== -->
@@ -408,12 +409,18 @@
           </label>
         </div>
         <div class="field-help" id="notif-help">
-          Если приложение открыто (даже в фоновой вкладке), пришлёт push-напоминание. Если приложение полностью закрыто, надёжнее заглянуть самой — в Истории появится пометка «пора оценить».
+          Важно: даже когда это включено и разрешено, Android обычно «замораживает» вкладку через несколько минут в фоне — и напоминание просто не успевает прийти. Это сработает только если экран приложения весь нужный промежуток времени остаётся на виду. Надёжный вариант — кнопка «Напомнить через календарь» у каждой записи в Истории (ниже) или просто заглянуть в Историю самой — там есть пометка «пора оценить».
         </div>
       </div>
       <span class="saved-flash" id="settings-saved">Сохранено</span>
     </div>
 
+    <div class="card">
+      <label class="field-label">Надёжное напоминание (через Календарь)</label>
+      <div class="field-help" style="margin-top:0;">
+        У каждой новой записи в Истории (пока не отмечено самочувствие) есть кнопка «🔔 в календарь». Она скачивает файл-напоминание, который Android откроет в приложении Календарь — это сработает даже если телефон лежит экраном вниз, потому что использует системные напоминания, а не браузер.
+      </div>
+    </div>
     <div class="card">
       <label class="field-label">Экспорт данных</label>
       <button type="button" class="save-btn ghost" id="export-json-btn">Скачать резервную копию (JSON)</button>
@@ -486,6 +493,7 @@
     </div>
 
     <button class="save-btn" id="fu-save">Сохранить ощущения</button>
+    <button type="button" class="save-btn ghost" id="fu-skip" style="margin-top:8px;">Не записывать в этот раз</button>
   </div>
 </div>
 
@@ -611,13 +619,18 @@ const discomfortGauge = setupSegGauge("discomfort-seg","discomfort-val", 0);
 document.getElementById("hunger-clear").addEventListener("click", ()=> hungerGauge.set(null));
 document.getElementById("fullness-clear").addEventListener("click", ()=> fullnessGauge.set(null));
 
-// ---------- reason chips (entry form) ----------
-let selectedReason = null;
+// ---------- reason chips (entry form, multi-select) ----------
+let selectedReasons = [];
 document.querySelectorAll("#reason-chips .chip").forEach(chip=>{
   chip.addEventListener("click", ()=>{
-    document.querySelectorAll("#reason-chips .chip").forEach(c=>c.classList.remove("active"));
-    chip.classList.add("active");
-    selectedReason = chip.dataset.reason;
+    const r = chip.dataset.reason;
+    if(selectedReasons.includes(r)){
+      selectedReasons = selectedReasons.filter(x=>x!==r);
+      chip.classList.remove("active");
+    } else {
+      selectedReasons.push(r);
+      chip.classList.add("active");
+    }
   });
 });
 
@@ -686,7 +699,7 @@ function resetFormFields(){
   document.getElementById("f-time").value = nowLocal();
   hungerGauge.set(null);
   fullnessGauge.set(null);
-  selectedReason = null;
+  selectedReasons = [];
   document.querySelectorAll("#reason-chips .chip").forEach(c=>c.classList.remove("active"));
   showPhotoPreview(null);
 }
@@ -700,9 +713,9 @@ function enterEditMode(id){
   document.getElementById("f-note").value = entry.note || "";
   hungerGauge.set(entry.hunger == null ? null : entry.hunger);
   fullnessGauge.set(entry.fullness == null ? null : entry.fullness);
-  selectedReason = entry.reason || null;
+  selectedReasons = getEntryReasons(entry);
   document.querySelectorAll("#reason-chips .chip").forEach(c=>{
-    c.classList.toggle("active", c.dataset.reason === entry.reason);
+    c.classList.toggle("active", selectedReasons.includes(c.dataset.reason));
   });
   showPhotoPreview(entry.photo || null);
   document.getElementById("edit-banner").style.display = "block";
@@ -736,7 +749,8 @@ document.getElementById("entry-form").addEventListener("submit", (e)=>{
       entry.photo = photoData;
       entry.hunger = hungerVal;
       entry.fullness = fullnessVal;
-      entry.reason = selectedReason;
+      entry.reasons = selectedReasons.slice();
+      delete entry.reason;
       entry.note = noteVal;
       if(!entry.followUp){
         entry.reminderAt = new Date(mealTime).getTime() + settings.reminderMinutes*60000;
@@ -760,7 +774,7 @@ document.getElementById("entry-form").addEventListener("submit", (e)=>{
     photo: photoData,
     hunger: hungerVal,
     fullness: fullnessVal,
-    reason: selectedReason,
+    reasons: selectedReasons.slice(),
     note: noteVal,
     reminderAt: new Date(mealTime).getTime() + settings.reminderMinutes*60000,
     followUp: null
@@ -787,6 +801,11 @@ function escapeHtml(str){
   const div = document.createElement("div");
   div.textContent = str;
   return div.innerHTML;
+}
+function getEntryReasons(entry){
+  if(Array.isArray(entry.reasons)) return entry.reasons;
+  if(entry.reason) return [entry.reason];
+  return [];
 }
 function logicalDay(timeStr){
   const d = new Date(timeStr);
@@ -827,7 +846,10 @@ document.getElementById("filters-reset").addEventListener("click", ()=>{
 
 function bandOf(v){ if(v==null) return null; return v<=1 ? "low" : (v<=3 ? "mid" : "high"); }
 function passesFilter(entry){
-  if(filterState.reasons.length && (!entry.reason || !filterState.reasons.includes(entry.reason))) return false;
+  if(filterState.reasons.length){
+    const entryReasons = getEntryReasons(entry);
+    if(!entryReasons.some(r=>filterState.reasons.includes(r))) return false;
+  }
   if(filterState.hunger !== "any" && bandOf(entry.hunger) !== filterState.hunger) return false;
   if(filterState.fullness !== "any" && bandOf(entry.fullness) !== filterState.fullness) return false;
   return true;
@@ -866,16 +888,20 @@ function renderHistory(){
       : '<div class="thumb placeholder">🍽️</div>';
 
     let followUpHtml = "";
-    if(entry.followUp){
+    if(entry.followUp && !entry.followUp.skipped){
       followUpHtml = '<span class="tag discomfort">дискомфорт '+entry.followUp.discomfort+'/5</span>';
       if(entry.followUp.symptoms && entry.followUp.symptoms.length){
         followUpHtml += entry.followUp.symptoms.map(s=>'<span class="tag">'+escapeHtml(s)+'</span>').join("");
       }
+    } else if(entry.followUp && entry.followUp.skipped){
+      followUpHtml = '<span class="tag">самочувствие не отмечено</span>';
     } else if(entry.reminderAt && entry.reminderAt <= now){
       followUpHtml = '<span class="tag pending">⏳ пора оценить самочувствие</span>';
     } else if(entry.reminderAt){
       followUpHtml = '<span class="tag">оценка через '+Math.max(1,Math.round((entry.reminderAt-now)/60000))+' мин</span>';
     }
+
+    const entryReasonsHtml = getEntryReasons(entry).map(r=>'<span class="tag">'+escapeHtml(r)+'</span>').join("");
 
     html += '<div class="entry">'
       + thumb
@@ -885,13 +911,14 @@ function renderHistory(){
         + '<div class="entry-meta">'
           + (entry.hunger!=null ? '<span class="tag hunger">голод '+entry.hunger+'/5</span>' : '')
           + (entry.fullness!=null ? '<span class="tag fullness">сытость '+entry.fullness+'/5</span>' : '')
-          + (entry.reason ? '<span class="tag">'+escapeHtml(entry.reason)+'</span>' : '')
+          + entryReasonsHtml
           + followUpHtml
         + '</div>'
         + (entry.note ? '<div class="entry-note">'+escapeHtml(entry.note)+'</div>' : '')
-        + (entry.followUp && entry.followUp.note ? '<div class="entry-note">Самочувствие: '+escapeHtml(entry.followUp.note)+'</div>' : '')
+        + (entry.followUp && !entry.followUp.skipped && entry.followUp.note ? '<div class="entry-note">Самочувствие: '+escapeHtml(entry.followUp.note)+'</div>' : '')
         + '<div class="entry-actions">'
-          + (entry.followUp ? '' : '<button class="fu-btn" data-id="'+entry.id+'">записать самочувствие</button>')
+          + ((!entry.followUp || entry.followUp.skipped) ? '<button class="fu-btn" data-id="'+entry.id+'">записать самочувствие</button>' : '')
+          + ((!entry.followUp && entry.reminderAt) ? '<button class="cal-btn" data-id="'+entry.id+'">🔔 в календарь</button>' : '')
           + '<button class="edit-btn" data-id="'+entry.id+'">редактировать</button>'
           + '<button class="del-btn" data-id="'+entry.id+'">удалить</button>'
         + '</div>'
@@ -900,6 +927,9 @@ function renderHistory(){
   });
   list.innerHTML = html;
 
+  list.querySelectorAll(".cal-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=> downloadReminderIcs(Number(btn.dataset.id)));
+  });
   list.querySelectorAll(".del-btn").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       if(!confirm("Удалить эту запись?")) return;
@@ -954,6 +984,20 @@ document.getElementById("fu-save").addEventListener("click", ()=>{
       recordedAt: new Date().toISOString()
     };
     if(!saveEntries(entries)) return;
+  }
+  document.getElementById("followup-modal").style.display = "none";
+  activeFollowUpId = null;
+  renderHistory();
+  updateBanner();
+});
+document.getElementById("fu-skip").addEventListener("click", ()=>{
+  if(activeFollowUpId != null){
+    const entries = loadEntries();
+    const entry = entries.find(e=>e.id===activeFollowUpId);
+    if(entry){
+      entry.followUp = { skipped: true, recordedAt: new Date().toISOString() };
+      saveEntries(entries);
+    }
   }
   document.getElementById("followup-modal").style.display = "none";
   activeFollowUpId = null;
@@ -1203,7 +1247,7 @@ function renderAnalysis(){
   html += renderHourSection(allEntries);
 
   // --- какие продукты подходят ---
-  const followUpEntries = allEntries.filter(e=>e.followUp);
+  const followUpEntries = allEntries.filter(e=>e.followUp && !e.followUp.skipped && typeof e.followUp.discomfort === "number");
   if(followUpEntries.length === 0){
     html += '<div class="card disclaimer">Чтобы увидеть, какие продукты тебе подходят, записывай ощущения после еды (кнопка «записать самочувствие» в Истории) — пока таких записей нет.</div>';
   } else {
@@ -1260,6 +1304,41 @@ function downloadBlob(content, filename, mime){
   document.body.appendChild(a); a.click();
   setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
 }
+
+// ---------- reliable reminder via calendar (.ics) ----------
+function icsDate(d){
+  function p2(n){ return String(n).padStart(2,"0"); }
+  return d.getUTCFullYear()+p2(d.getUTCMonth()+1)+p2(d.getUTCDate())+"T"+p2(d.getUTCHours())+p2(d.getUTCMinutes())+p2(d.getUTCSeconds())+"Z";
+}
+function downloadReminderIcs(id){
+  const entry = loadEntries().find(e=>e.id===id);
+  if(!entry || !entry.reminderAt) return;
+  const start = new Date(entry.reminderAt);
+  const end = new Date(entry.reminderAt + 15*60000);
+  const summary = "Как самочувствие после еды?";
+  const desc = "Запись: " + (entry.food || "приём пищи").replace(/[\r\n]+/g," ");
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//FoodDiary//RU",
+    "BEGIN:VEVENT",
+    "UID:fooddiary-"+entry.id+"@local",
+    "DTSTAMP:"+icsDate(new Date()),
+    "DTSTART:"+icsDate(start),
+    "DTEND:"+icsDate(end),
+    "SUMMARY:"+summary,
+    "DESCRIPTION:"+desc,
+    "BEGIN:VALARM",
+    "ACTION:DISPLAY",
+    "DESCRIPTION:"+summary,
+    "TRIGGER:-PT0M",
+    "END:VALARM",
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ].join("\r\n");
+  downloadBlob(ics, "napominanie-"+entry.id+".ics", "text/calendar;charset=utf-8");
+}
+
 function todayStr(){ const d=new Date(); return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate()); }
 function csvEscape(val){
   val = String(val == null ? "" : val);
@@ -1279,11 +1358,11 @@ document.getElementById("export-csv-btn").addEventListener("click", ()=>{
       e.food || "",
       e.hunger==null ? "" : e.hunger,
       e.fullness==null ? "" : e.fullness,
-      e.reason || "",
+      getEntryReasons(e).join("; "),
       e.note || "",
-      e.followUp ? e.followUp.discomfort : "",
-      e.followUp && e.followUp.symptoms ? e.followUp.symptoms.join("; ") : "",
-      e.followUp ? (e.followUp.note || "") : ""
+      (e.followUp && !e.followUp.skipped) ? e.followUp.discomfort : "",
+      (e.followUp && !e.followUp.skipped && e.followUp.symptoms) ? e.followUp.symptoms.join("; ") : "",
+      (e.followUp && !e.followUp.skipped) ? (e.followUp.note || "") : ""
     ]);
   });
   const csv = rows.map(r => r.map(csvEscape).join(",")).join("\r\n");
