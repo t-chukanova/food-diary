@@ -120,8 +120,32 @@
   .segbar.hunger .seg.filled{background:var(--clay);border-color:var(--clay);color:#fff;}
   .segbar.fullness .seg.filled{background:var(--sage);border-color:var(--sage);color:#fff;}
   .segbar.discomfort .seg.filled{background:var(--alert);border-color:var(--alert);color:#fff;}
+  .segbar.before .seg.filled{background:var(--clay);border-color:var(--clay);color:#fff;}
+  .segbar.after .seg.filled{background:var(--sage);border-color:var(--sage);color:#fff;}
+  .segbar.dense{gap:2px;}
+  .segbar.dense .seg{height:36px;font-size:0.74rem;border-radius:7px;padding:0;}
   .scale-caption{display:flex;justify-content:space-between;font-size:0.7rem;color:var(--ink-soft);margin-top:6px;}
+  .scale-caption.three{display:grid;grid-template-columns:1fr 1fr 1fr;}
+  .scale-caption.three span:first-child{text-align:left;}
+  .scale-caption.three span:nth-child(2){text-align:center;}
+  .scale-caption.three span:last-child{text-align:right;}
   .gauge-clear{font-size:0.74rem;color:var(--ink-soft);text-decoration:underline;cursor:pointer;display:inline-block;margin-top:8px;}
+
+  /* range sliders (вина / присутствие) */
+  input[type="range"]{
+    width:100%; height:6px; border-radius:6px; background:var(--line); outline:none;
+    -webkit-appearance:none; appearance:none; margin:6px 0;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:24px; height:24px; border-radius:50%;
+    background:var(--clay); border:3px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,0.25); cursor:pointer;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:24px; height:24px; border-radius:50%; background:var(--clay); border:3px solid #fff;
+    box-shadow:0 1px 3px rgba(0,0,0,0.25); cursor:pointer;
+  }
+  input[type="range"].sage-thumb::-webkit-slider-thumb{background:var(--sage);}
+  input[type="range"].sage-thumb::-moz-range-thumb{background:var(--sage);}
 
   /* chips */
   .chips{display:flex;flex-wrap:wrap;gap:8px;}
@@ -166,8 +190,7 @@
   .tag.pending{color:var(--clay);border-color:var(--clay);font-weight:600;}
   .entry-note{font-size:0.82rem;color:var(--ink-soft);font-style:italic;}
   .entry-actions{margin-top:8px;display:flex;gap:14px;flex-wrap:wrap;}
-  .del-btn,.fu-btn,.edit-btn,.cal-btn{background:none;border:none;color:var(--ink-soft);font-size:0.74rem;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit;}
-  .cal-btn{color:var(--sage);font-weight:600;}
+  .del-btn,.fu-btn,.edit-btn{background:none;border:none;color:var(--ink-soft);font-size:0.74rem;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit;}
   .fu-btn{color:var(--clay);font-weight:600;}
 
   .day-divider{font-size:0.76rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);margin:22px 0 10px;font-weight:600;}
@@ -223,7 +246,7 @@
 
 <header>
   <h1>Дневник питания</h1>
-  <p>Что съела, голод и сытость, причина — всё в одном месте</p>
+  <p>Что съела, ощущения до и после, причина — всё в одном месте</p>
 </header>
 
 <div id="file-warning" style="display:none;max-width:560px;margin:14px auto 0;padding:0 16px;">
@@ -286,28 +309,32 @@
       <div class="card">
         <div class="gauge-wrap">
           <div class="gauge-head">
-            <label class="field-label" style="margin-bottom:0;">Голод до еды</label>
-            <span class="val" id="hunger-val">—</span>
+            <label class="field-label" style="margin-bottom:0;">Ощущения до еды</label>
+            <span class="val" id="before-val">—</span>
           </div>
-          <div class="segbar hunger" id="hunger-seg">
-            <div class="seg" data-v="0">0</div><div class="seg" data-v="1">1</div><div class="seg" data-v="2">2</div>
-            <div class="seg" data-v="3">3</div><div class="seg" data-v="4">4</div><div class="seg" data-v="5">5</div>
+          <div class="segbar before dense" id="before-seg">
+            <div class="seg" data-v="-5">−5</div><div class="seg" data-v="-4">−4</div><div class="seg" data-v="-3">−3</div>
+            <div class="seg" data-v="-2">−2</div><div class="seg" data-v="-1">−1</div><div class="seg" data-v="0">0</div>
+            <div class="seg" data-v="1">1</div><div class="seg" data-v="2">2</div><div class="seg" data-v="3">3</div>
+            <div class="seg" data-v="4">4</div><div class="seg" data-v="5">5</div>
           </div>
-          <div class="scale-caption"><span>нет голода</span><span>очень голодна</span></div>
-          <span class="gauge-clear" id="hunger-clear">Не отмечать</span>
+          <div class="scale-caption three"><span>умираю от голода</span><span>ни сыта, ни голодна</span><span>сильно переела</span></div>
+          <span class="gauge-clear" id="before-clear">Не отмечать</span>
         </div>
 
         <div class="gauge-wrap" style="margin-bottom:0;">
           <div class="gauge-head">
-            <label class="field-label" style="margin-bottom:0;">Сытость после еды</label>
-            <span class="val" id="fullness-val">—</span>
+            <label class="field-label" style="margin-bottom:0;">Ощущения после еды</label>
+            <span class="val" id="after-val">—</span>
           </div>
-          <div class="segbar fullness" id="fullness-seg">
-            <div class="seg" data-v="0">0</div><div class="seg" data-v="1">1</div><div class="seg" data-v="2">2</div>
-            <div class="seg" data-v="3">3</div><div class="seg" data-v="4">4</div><div class="seg" data-v="5">5</div>
+          <div class="segbar after dense" id="after-seg">
+            <div class="seg" data-v="-5">−5</div><div class="seg" data-v="-4">−4</div><div class="seg" data-v="-3">−3</div>
+            <div class="seg" data-v="-2">−2</div><div class="seg" data-v="-1">−1</div><div class="seg" data-v="0">0</div>
+            <div class="seg" data-v="1">1</div><div class="seg" data-v="2">2</div><div class="seg" data-v="3">3</div>
+            <div class="seg" data-v="4">4</div><div class="seg" data-v="5">5</div>
           </div>
-          <div class="scale-caption"><span>не наелась</span><span>переела</span></div>
-          <span class="gauge-clear" id="fullness-clear">Не отмечать</span>
+          <div class="scale-caption three"><span>умираю от голода</span><span>ни сыта, ни голодна</span><span>сильно переела</span></div>
+          <span class="gauge-clear" id="after-clear">Не отмечать</span>
         </div>
       </div>
 
@@ -324,6 +351,40 @@
       </div>
 
       <div class="card">
+        <label class="field-label">Как именно ты ела</label>
+
+        <div class="field">
+          <div class="toggle-row">
+            <span style="font-size:0.92rem;">Чувство вины</span>
+            <label class="switch">
+              <input type="checkbox" id="f-guilt-toggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div id="guilt-intensity-wrap" style="display:none;margin-top:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--ink-soft);margin-bottom:4px;">
+              <span>Интенсивность</span><span id="guilt-val" style="font-family:Georgia,serif;color:var(--ink);font-weight:700;">5</span>
+            </div>
+            <input type="range" min="1" max="10" step="1" value="5" id="f-guilt-intensity">
+            <div class="scale-caption"><span>еле заметно</span><span>очень сильно</span></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="chip" id="tag-parallel-viewing" data-on="0" style="display:inline-block;">📺 Параллельный просмотр (ютуб, видео и т.п.)</div>
+        </div>
+
+        <div class="field" style="margin-bottom:0;">
+          <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--ink-soft);margin-bottom:4px;">
+            <span>Насколько была «в теле» и наслаждалась едой</span>
+          </div>
+          <input type="range" class="sage-thumb" min="0" max="10" step="1" value="5" id="f-presence">
+          <div class="scale-caption"><span>улетала в мыслях, отвлекалась</span><span>была в моменте, концентрировалась на еде</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+
         <label class="field-label">Заметка</label>
         <textarea id="f-note" placeholder="Любые мысли, ощущения, контекст..."></textarea>
       </div>
@@ -356,21 +417,24 @@
       </div>
 
       <div class="field" style="margin-top:16px;">
-        <label class="field-label">Голод</label>
-        <select id="filter-hunger">
-          <option value="any">Любой</option>
-          <option value="low">Низкий (0–1)</option>
-          <option value="mid">Средний (2–3)</option>
-          <option value="high">Высокий (4–5)</option>
+        <label class="field-label">Ощущения до еды</label>
+        <select id="filter-before">
+          <option value="any">Любые</option>
+          <option value="very_low">Очень голодная (−5…−3)</option>
+          <option value="low">Слегка голодная (−2…−1)</option>
+          <option value="neutral">Нейтрально (0)</option>
+          <option value="ge1">Сытая или больше (1…5)</option>
         </select>
       </div>
       <div class="field" style="margin-bottom:4px;">
-        <label class="field-label">Сытость</label>
-        <select id="filter-fullness">
-          <option value="any">Любая</option>
-          <option value="low">Низкая (0–1)</option>
-          <option value="mid">Средняя (2–3)</option>
-          <option value="high">Высокая (4–5)</option>
+        <label class="field-label">Ощущения после еды</label>
+        <select id="filter-after">
+          <option value="any">Любые</option>
+          <option value="very_low">Очень голодная (−5…−3)</option>
+          <option value="low">Слегка голодная (−2…−1)</option>
+          <option value="neutral">Нейтрально (0)</option>
+          <option value="high">Сытая (1…2)</option>
+          <option value="very_high">Переела (3…5)</option>
         </select>
       </div>
       <span class="photo-remove" id="filters-reset">Сбросить фильтры</span>
@@ -409,18 +473,12 @@
           </label>
         </div>
         <div class="field-help" id="notif-help">
-          Важно: даже когда это включено и разрешено, Android обычно «замораживает» вкладку через несколько минут в фоне — и напоминание просто не успевает прийти. Это сработает только если экран приложения весь нужный промежуток времени остаётся на виду. Надёжный вариант — кнопка «Напомнить через календарь» у каждой записи в Истории (ниже) или просто заглянуть в Историю самой — там есть пометка «пора оценить».
+          Важно: даже когда это включено и разрешено, Android обычно «замораживает» вкладку через несколько минут в фоне — и напоминание просто не успевает прийти. Это сработает только если экран приложения весь нужный промежуток времени остаётся на виду. Самый надёжный способ — просто заглядывать в Историю самой: там у неоценённых записей есть пометка «пора оценить».
         </div>
       </div>
       <span class="saved-flash" id="settings-saved">Сохранено</span>
     </div>
 
-    <div class="card">
-      <label class="field-label">Надёжное напоминание (через Календарь)</label>
-      <div class="field-help" style="margin-top:0;">
-        У каждой новой записи в Истории (пока не отмечено самочувствие) есть кнопка «🔔 в календарь». Она скачивает файл-напоминание, который Android откроет в приложении Календарь — это сработает даже если телефон лежит экраном вниз, потому что использует системные напоминания, а не браузер.
-      </div>
-    </div>
     <div class="card">
       <label class="field-label">Экспорт данных</label>
       <button type="button" class="save-btn ghost" id="export-json-btn">Скачать резервную копию (JSON)</button>
@@ -590,17 +648,24 @@ document.querySelectorAll(".tabbar button").forEach(btn=>{
 document.getElementById("f-time").value = nowLocal();
 
 // ---------- segmented gauge (supports null = "не отмечено") ----------
-function setupSegGauge(containerId, valId, initial){
+function setupSegGauge(containerId, valId, initial, opts){
+  opts = opts || {};
   const container = document.getElementById(containerId);
   const segs = Array.from(container.querySelectorAll(".seg"));
   const valEl = document.getElementById(valId);
   let value = (initial === undefined) ? null : initial;
+  function fmtVal(v){
+    if(v == null) return "—";
+    if(opts.signed && v > 0) return "+"+v;
+    return String(v);
+  }
   function render(){
     segs.forEach(seg=>{
       const v = Number(seg.dataset.v);
-      seg.classList.toggle("filled", value != null && v <= value);
+      const isOn = opts.cumulative === false ? (value != null && v === value) : (value != null && v <= value);
+      seg.classList.toggle("filled", isOn);
     });
-    valEl.textContent = (value == null) ? "—" : value;
+    valEl.textContent = fmtVal(value);
   }
   segs.forEach(seg=>{
     seg.addEventListener("click", ()=>{
@@ -612,12 +677,30 @@ function setupSegGauge(containerId, valId, initial){
   render();
   return { get: ()=>value, set: (v)=>{ value = (v===undefined?null:v); render(); } };
 }
-const hungerGauge = setupSegGauge("hunger-seg","hunger-val", null);
-const fullnessGauge = setupSegGauge("fullness-seg","fullness-val", null);
+const beforeGauge = setupSegGauge("before-seg","before-val", null, { cumulative:false, signed:true });
+const afterGauge = setupSegGauge("after-seg","after-val", null, { cumulative:false, signed:true });
 const discomfortGauge = setupSegGauge("discomfort-seg","discomfort-val", 0);
 
-document.getElementById("hunger-clear").addEventListener("click", ()=> hungerGauge.set(null));
-document.getElementById("fullness-clear").addEventListener("click", ()=> fullnessGauge.set(null));
+document.getElementById("before-clear").addEventListener("click", ()=> beforeGauge.set(null));
+document.getElementById("after-clear").addEventListener("click", ()=> afterGauge.set(null));
+
+// ---------- guilt toggle + intensity ----------
+const guiltToggle = document.getElementById("f-guilt-toggle");
+const guiltWrap = document.getElementById("guilt-intensity-wrap");
+const guiltRange = document.getElementById("f-guilt-intensity");
+const guiltVal = document.getElementById("guilt-val");
+guiltToggle.addEventListener("change", ()=>{
+  guiltWrap.style.display = guiltToggle.checked ? "block" : "none";
+});
+guiltRange.addEventListener("input", ()=>{ guiltVal.textContent = guiltRange.value; });
+
+// ---------- parallel viewing tag ----------
+const parallelTag = document.getElementById("tag-parallel-viewing");
+parallelTag.addEventListener("click", ()=>{
+  const on = parallelTag.dataset.on === "1";
+  parallelTag.dataset.on = on ? "0" : "1";
+  parallelTag.classList.toggle("active", !on);
+});
 
 // ---------- reason chips (entry form, multi-select) ----------
 let selectedReasons = [];
@@ -697,10 +780,17 @@ function resetFormFields(){
   document.getElementById("f-food").value = "";
   document.getElementById("f-note").value = "";
   document.getElementById("f-time").value = nowLocal();
-  hungerGauge.set(null);
-  fullnessGauge.set(null);
+  beforeGauge.set(null);
+  afterGauge.set(null);
   selectedReasons = [];
   document.querySelectorAll("#reason-chips .chip").forEach(c=>c.classList.remove("active"));
+  guiltToggle.checked = false;
+  guiltWrap.style.display = "none";
+  guiltRange.value = 5;
+  guiltVal.textContent = "5";
+  parallelTag.dataset.on = "0";
+  parallelTag.classList.remove("active");
+  document.getElementById("f-presence").value = 5;
   showPhotoPreview(null);
 }
 
@@ -711,12 +801,27 @@ function enterEditMode(id){
   document.getElementById("f-time").value = entry.time;
   document.getElementById("f-food").value = entry.food || "";
   document.getElementById("f-note").value = entry.note || "";
-  hungerGauge.set(entry.hunger == null ? null : entry.hunger);
-  fullnessGauge.set(entry.fullness == null ? null : entry.fullness);
+  const ba = getBeforeAfter(entry);
+  beforeGauge.set(ba.before);
+  afterGauge.set(ba.after);
   selectedReasons = getEntryReasons(entry);
   document.querySelectorAll("#reason-chips .chip").forEach(c=>{
     c.classList.toggle("active", selectedReasons.includes(c.dataset.reason));
   });
+  if(entry.guilt){
+    guiltToggle.checked = true;
+    guiltWrap.style.display = "block";
+    guiltRange.value = entry.guilt.intensity;
+    guiltVal.textContent = entry.guilt.intensity;
+  } else {
+    guiltToggle.checked = false;
+    guiltWrap.style.display = "none";
+    guiltRange.value = 5;
+    guiltVal.textContent = "5";
+  }
+  parallelTag.dataset.on = entry.parallelViewing ? "1" : "0";
+  parallelTag.classList.toggle("active", !!entry.parallelViewing);
+  document.getElementById("f-presence").value = (entry.presence != null ? entry.presence : 5);
   showPhotoPreview(entry.photo || null);
   document.getElementById("edit-banner").style.display = "block";
   document.getElementById("save-submit-btn").textContent = "Сохранить изменения";
@@ -737,8 +842,11 @@ document.getElementById("entry-form").addEventListener("submit", (e)=>{
   const mealTime = document.getElementById("f-time").value;
   const foodVal = document.getElementById("f-food").value.trim();
   const noteVal = document.getElementById("f-note").value.trim();
-  const hungerVal = hungerGauge.get();
-  const fullnessVal = fullnessGauge.get();
+  const beforeVal = beforeGauge.get();
+  const afterVal = afterGauge.get();
+  const guiltVal2 = guiltToggle.checked ? { intensity: parseInt(guiltRange.value, 10) } : null;
+  const parallelVal = parallelTag.dataset.on === "1";
+  const presenceVal = parseInt(document.getElementById("f-presence").value, 10);
 
   if(editingEntryId != null){
     const entries = loadEntries();
@@ -747,10 +855,15 @@ document.getElementById("entry-form").addEventListener("submit", (e)=>{
       entry.time = mealTime;
       entry.food = foodVal;
       entry.photo = photoData;
-      entry.hunger = hungerVal;
-      entry.fullness = fullnessVal;
+      entry.before = beforeVal;
+      entry.after = afterVal;
+      delete entry.hunger;
+      delete entry.fullness;
       entry.reasons = selectedReasons.slice();
       delete entry.reason;
+      entry.guilt = guiltVal2;
+      entry.parallelViewing = parallelVal;
+      entry.presence = presenceVal;
       entry.note = noteVal;
       if(!entry.followUp){
         entry.reminderAt = new Date(mealTime).getTime() + settings.reminderMinutes*60000;
@@ -772,9 +885,12 @@ document.getElementById("entry-form").addEventListener("submit", (e)=>{
     time: mealTime,
     food: foodVal,
     photo: photoData,
-    hunger: hungerVal,
-    fullness: fullnessVal,
+    before: beforeVal,
+    after: afterVal,
     reasons: selectedReasons.slice(),
+    guilt: guiltVal2,
+    parallelViewing: parallelVal,
+    presence: presenceVal,
     note: noteVal,
     reminderAt: new Date(mealTime).getTime() + settings.reminderMinutes*60000,
     followUp: null
@@ -807,6 +923,15 @@ function getEntryReasons(entry){
   if(entry.reason) return [entry.reason];
   return [];
 }
+function getBeforeAfter(entry){
+  const before = (entry.before !== undefined) ? entry.before : (entry.hunger != null ? -entry.hunger : null);
+  const after = (entry.after !== undefined) ? entry.after : (entry.fullness != null ? entry.fullness : null);
+  return { before, after };
+}
+function fmtSigned(v){
+  if(v == null) return "—";
+  return v > 0 ? ("+"+v) : String(v);
+}
 function logicalDay(timeStr){
   const d = new Date(timeStr);
   if(isNaN(d)) return null;
@@ -819,7 +944,7 @@ function logicalDay(timeStr){
 }
 
 // ---------- history filters ----------
-let filterState = { reasons: [], hunger: "any", fullness: "any" };
+let filterState = { reasons: [], before: "any", after: "any" };
 
 document.querySelectorAll("#filter-reason-chips .chip").forEach(chip=>{
   chip.addEventListener("click", ()=>{
@@ -834,24 +959,35 @@ document.querySelectorAll("#filter-reason-chips .chip").forEach(chip=>{
     renderHistory();
   });
 });
-document.getElementById("filter-hunger").addEventListener("change", (e)=>{ filterState.hunger = e.target.value; renderHistory(); });
-document.getElementById("filter-fullness").addEventListener("change", (e)=>{ filterState.fullness = e.target.value; renderHistory(); });
+document.getElementById("filter-before").addEventListener("change", (e)=>{ filterState.before = e.target.value; renderHistory(); });
+document.getElementById("filter-after").addEventListener("change", (e)=>{ filterState.after = e.target.value; renderHistory(); });
 document.getElementById("filters-reset").addEventListener("click", ()=>{
-  filterState = { reasons: [], hunger: "any", fullness: "any" };
+  filterState = { reasons: [], before: "any", after: "any" };
   document.querySelectorAll("#filter-reason-chips .chip").forEach(c=>c.classList.remove("active"));
-  document.getElementById("filter-hunger").value = "any";
-  document.getElementById("filter-fullness").value = "any";
+  document.getElementById("filter-before").value = "any";
+  document.getElementById("filter-after").value = "any";
   renderHistory();
 });
 
-function bandOf(v){ if(v==null) return null; return v<=1 ? "low" : (v<=3 ? "mid" : "high"); }
+function matchBeforeAfter(value, option){
+  if(option === "any") return true;
+  if(value == null) return false;
+  if(option === "very_low") return value <= -3;
+  if(option === "low") return value >= -2 && value <= -1;
+  if(option === "neutral") return value === 0;
+  if(option === "ge1") return value >= 1;
+  if(option === "high") return value >= 1 && value <= 2;
+  if(option === "very_high") return value >= 3;
+  return false;
+}
 function passesFilter(entry){
   if(filterState.reasons.length){
     const entryReasons = getEntryReasons(entry);
     if(!entryReasons.some(r=>filterState.reasons.includes(r))) return false;
   }
-  if(filterState.hunger !== "any" && bandOf(entry.hunger) !== filterState.hunger) return false;
-  if(filterState.fullness !== "any" && bandOf(entry.fullness) !== filterState.fullness) return false;
+  const ba = getBeforeAfter(entry);
+  if(filterState.before !== "any" && !matchBeforeAfter(ba.before, filterState.before)) return false;
+  if(filterState.after !== "any" && !matchBeforeAfter(ba.after, filterState.after)) return false;
   return true;
 }
 
@@ -861,7 +997,7 @@ function renderHistory(){
   const allEntries = loadEntries();
   const entries = allEntries.filter(passesFilter).sort((a,b)=> new Date(b.time) - new Date(a.time));
 
-  const filtersActive = filterState.reasons.length || filterState.hunger!=="any" || filterState.fullness!=="any";
+  const filtersActive = filterState.reasons.length || filterState.before!=="any" || filterState.after!=="any";
   const summaryEl = document.getElementById("filter-summary");
   summaryEl.textContent = filtersActive ? ("Показано "+entries.length+" из "+allEntries.length+" записей") : "";
 
@@ -902,6 +1038,11 @@ function renderHistory(){
     }
 
     const entryReasonsHtml = getEntryReasons(entry).map(r=>'<span class="tag">'+escapeHtml(r)+'</span>').join("");
+    const ba = getBeforeAfter(entry);
+    let extraTagsHtml = "";
+    if(entry.guilt){ extraTagsHtml += '<span class="tag">вина '+entry.guilt.intensity+'/10</span>'; }
+    if(entry.parallelViewing){ extraTagsHtml += '<span class="tag">📺 параллельно</span>'; }
+    if(entry.presence != null){ extraTagsHtml += '<span class="tag">присутствие '+entry.presence+'/10</span>'; }
 
     html += '<div class="entry">'
       + thumb
@@ -909,16 +1050,16 @@ function renderHistory(){
         + '<div class="entry-top"><span class="entry-time">'+fmtTime(entry.time)+'</span></div>'
         + '<div class="entry-food">'+escapeHtml(entry.food || "(без описания)")+'</div>'
         + '<div class="entry-meta">'
-          + (entry.hunger!=null ? '<span class="tag hunger">голод '+entry.hunger+'/5</span>' : '')
-          + (entry.fullness!=null ? '<span class="tag fullness">сытость '+entry.fullness+'/5</span>' : '')
+          + (ba.before!=null ? '<span class="tag hunger">до еды '+fmtSigned(ba.before)+'</span>' : '')
+          + (ba.after!=null ? '<span class="tag fullness">после еды '+fmtSigned(ba.after)+'</span>' : '')
           + entryReasonsHtml
+          + extraTagsHtml
           + followUpHtml
         + '</div>'
         + (entry.note ? '<div class="entry-note">'+escapeHtml(entry.note)+'</div>' : '')
         + (entry.followUp && !entry.followUp.skipped && entry.followUp.note ? '<div class="entry-note">Самочувствие: '+escapeHtml(entry.followUp.note)+'</div>' : '')
         + '<div class="entry-actions">'
           + ((!entry.followUp || entry.followUp.skipped) ? '<button class="fu-btn" data-id="'+entry.id+'">записать самочувствие</button>' : '')
-          + ((!entry.followUp && entry.reminderAt) ? '<button class="cal-btn" data-id="'+entry.id+'">🔔 в календарь</button>' : '')
           + '<button class="edit-btn" data-id="'+entry.id+'">редактировать</button>'
           + '<button class="del-btn" data-id="'+entry.id+'">удалить</button>'
         + '</div>'
@@ -927,9 +1068,6 @@ function renderHistory(){
   });
   list.innerHTML = html;
 
-  list.querySelectorAll(".cal-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=> downloadReminderIcs(Number(btn.dataset.id)));
-  });
   list.querySelectorAll(".del-btn").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       if(!confirm("Удалить эту запись?")) return;
@@ -1305,40 +1443,6 @@ function downloadBlob(content, filename, mime){
   setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
 }
 
-// ---------- reliable reminder via calendar (.ics) ----------
-function icsDate(d){
-  function p2(n){ return String(n).padStart(2,"0"); }
-  return d.getUTCFullYear()+p2(d.getUTCMonth()+1)+p2(d.getUTCDate())+"T"+p2(d.getUTCHours())+p2(d.getUTCMinutes())+p2(d.getUTCSeconds())+"Z";
-}
-function downloadReminderIcs(id){
-  const entry = loadEntries().find(e=>e.id===id);
-  if(!entry || !entry.reminderAt) return;
-  const start = new Date(entry.reminderAt);
-  const end = new Date(entry.reminderAt + 15*60000);
-  const summary = "Как самочувствие после еды?";
-  const desc = "Запись: " + (entry.food || "приём пищи").replace(/[\r\n]+/g," ");
-  const ics = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//FoodDiary//RU",
-    "BEGIN:VEVENT",
-    "UID:fooddiary-"+entry.id+"@local",
-    "DTSTAMP:"+icsDate(new Date()),
-    "DTSTART:"+icsDate(start),
-    "DTEND:"+icsDate(end),
-    "SUMMARY:"+summary,
-    "DESCRIPTION:"+desc,
-    "BEGIN:VALARM",
-    "ACTION:DISPLAY",
-    "DESCRIPTION:"+summary,
-    "TRIGGER:-PT0M",
-    "END:VALARM",
-    "END:VEVENT",
-    "END:VCALENDAR"
-  ].join("\r\n");
-  downloadBlob(ics, "napominanie-"+entry.id+".ics", "text/calendar;charset=utf-8");
-}
-
 function todayStr(){ const d=new Date(); return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate()); }
 function csvEscape(val){
   val = String(val == null ? "" : val);
@@ -1350,15 +1454,19 @@ document.getElementById("export-json-btn").addEventListener("click", ()=>{
   downloadBlob(JSON.stringify(data, null, 2), "food-diary-backup-"+todayStr()+".json", "application/json");
 });
 document.getElementById("export-csv-btn").addEventListener("click", ()=>{
-  const rows = [["Дата","Время","Еда","Голод","Сытость","Причина","Заметка","Дискомфорт","Симптомы","ЗаметкаПослеЕды"]];
+  const rows = [["Дата","Время","Еда","ДоЕды","ПослеЕды","Причина","Вина","ПараллельныйПросмотр","Присутствие","Заметка","Дискомфорт","Симптомы","ЗаметкаПослеЕды"]];
   loadEntries().sort((a,b)=> new Date(a.time)-new Date(b.time)).forEach(e=>{
+    const ba = getBeforeAfter(e);
     rows.push([
       fmtDate(new Date(e.time)),
       fmtTime(e.time),
       e.food || "",
-      e.hunger==null ? "" : e.hunger,
-      e.fullness==null ? "" : e.fullness,
+      ba.before==null ? "" : ba.before,
+      ba.after==null ? "" : ba.after,
       getEntryReasons(e).join("; "),
+      e.guilt ? e.guilt.intensity : "",
+      e.parallelViewing ? "да" : "",
+      e.presence==null ? "" : e.presence,
       e.note || "",
       (e.followUp && !e.followUp.skipped) ? e.followUp.discomfort : "",
       (e.followUp && !e.followUp.skipped && e.followUp.symptoms) ? e.followUp.symptoms.join("; ") : "",

@@ -1,4 +1,4 @@
-const CACHE = "food-diary-v6";
+const CACHE = "food-diary-v7";
 const ASSETS = [
   "./index.html",
   "./manifest.json",
