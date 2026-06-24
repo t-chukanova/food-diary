@@ -1,4 +1,4 @@
-const CACHE = "food-diary-v7";
+const CACHE = "food-diary-v8";
 const ASSETS = [
   "./index.html",
   "./manifest.json",
@@ -22,8 +22,16 @@ self.addEventListener("activate", (e)=>{
   self.clients.claim();
 });
 
+// Сначала пытаемся получить свежую версию из сети (чтобы обновления
+// сразу подхватывались), и только если сети нет — берём из кэша.
 self.addEventListener("fetch", (e)=>{
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request)
+      .then(resp=>{
+        const copy = resp.clone();
+        caches.open(CACHE).then(cache => cache.put(e.request, copy)).catch(()=>{});
+        return resp;
+      })
+      .catch(()=> caches.match(e.request))
   );
 });

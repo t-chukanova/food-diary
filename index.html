@@ -1612,7 +1612,16 @@ document.addEventListener("visibilitychange", ()=>{
 // ---------- PWA service worker ----------
 if("serviceWorker" in navigator){
   window.addEventListener("load", ()=>{
-    navigator.serviceWorker.register("sw.js").catch(()=>{});
+    navigator.serviceWorker.register("sw.js").then(reg=>{
+      // проверяем, нет ли уже более новой версии прямо при загрузке
+      reg.update().catch(()=>{});
+    }).catch(()=>{});
+  });
+  let reloadedOnce = false;
+  navigator.serviceWorker.addEventListener("controllerchange", ()=>{
+    if(reloadedOnce) return;
+    reloadedOnce = true;
+    window.location.reload();
   });
 }
 </script>
